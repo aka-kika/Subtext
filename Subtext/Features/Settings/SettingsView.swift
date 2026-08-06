@@ -204,10 +204,55 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
+            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                Text("Version \(version)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+
             Spacer()
+
+            HStack(spacing: 12) {
+                socialButton("GitHub", icon: "social-github", fallback: "chevron.left.forwardslash.chevron.right", url: "https://github.com/aka-kika/Subtext")
+                socialButton("akakika.com", icon: "social-web", fallback: "globe", url: "https://akakika.com")
+                socialButton("X", icon: "social-x", fallback: "at", url: "https://x.com/akakikaaa")
+            }
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func socialButton(_ title: String, icon: String, fallback: String, url: String) -> some View {
+        Button {
+            if let link = URL(string: url) { NSWorkspace.shared.open(link) }
+        } label: {
+            HStack(spacing: 6) {
+                socialIcon(icon, fallback: fallback)
+                Text(title)
+            }
+            .font(.callout)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func socialIcon(_ name: String, fallback: String) -> some View {
+        Group {
+            if let ns = NSImage(named: name) {
+                Image(nsImage: { ns.isTemplate = true; return ns }())
+                    .resizable()
+                    .frame(width: 14, height: 14)
+            } else {
+                Image(systemName: fallback)
+                    .font(.system(size: 12))
+            }
+        }
+        .foregroundStyle(.secondary)
     }
 }
 
