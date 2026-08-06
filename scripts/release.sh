@@ -16,8 +16,10 @@ DIST="$PROJECT_DIR/.build/dist"
 APP="$DIST/$APP_NAME.app"
 RES="$PROJECT_DIR/Subtext/Resources"
 
+# Sign by certificate hash, not display name — duplicate certs with the same
+# name in the keychain make name-based signing fail as "ambiguous".
 IDENTITY="${SUBTEXT_SIGN_IDENTITY:-$(security find-identity -v -p codesigning \
-  | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')}"
+  | grep "Developer ID Application" | head -1 | awk '{print $2}')}"
 if [ -z "$IDENTITY" ]; then
   echo "✗ No 'Developer ID Application' identity found in the Keychain." >&2
   exit 1
