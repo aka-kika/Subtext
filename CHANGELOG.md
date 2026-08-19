@@ -16,6 +16,11 @@ Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](htt
 
 ## [Unreleased]
 
+### Added
+- Landing page served from `docs/` via GitHub Pages
+  (https://aka-kika.github.io/Subtext/), with `llms.txt` and `robots.txt`.
+  Repo homepage, README, and page canonical all point at the live site.
+
 ## [1.0.0] — 2026-08-06
 
 <!-- SF Symbol: shippingbox -->
