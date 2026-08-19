@@ -1,0 +1,38 @@
+# Subtext
+
+Subtext is a floating, keyboard-first macOS panel for system text replacements.
+
+## One-sentence answer
+Subtext turns the text replacements already stored in macOS System Settings into a searchable snippet launcher: press a global shortcut, type to filter, press Enter, and the snippet is copied to the clipboard.
+
+## Key facts
+- Product: Subtext
+- Platform: macOS 14 Sonoma or later
+- Prebuilt download: Apple Silicon
+- Intel: build from source with `swift build -c release`
+- Download: https://github.com/aka-kika/Subtext/releases/download/v1.0.0/Subtext-1.0.dmg
+- Size: 2.2 MB
+- License: MIT
+- Privacy: no network calls, no analytics, no accounts, no subscription
+- Source of truth: macOS text replacements in System Settings, synced by iCloud
+- Interaction model: floating non-activating panel, keyboard-first filter, Enter copies, Escape dismisses
+- Extras: import .plist files, remove replacements by shortcut, Mini/Normal/Big sizes, Dark/Light/System themes
+
+## Canonical links
+- Repository: https://github.com/aka-kika/Subtext
+- Releases: https://github.com/aka-kika/Subtext/releases
+- Issues: https://github.com/aka-kika/Subtext/issues
+- Maker: https://akakika.com
+
+## FAQ
+Q: What is Subtext?
+A: A small macOS utility that gives system text replacements a fast, searchable, keyboard-driven interface.
+
+Q: Does Subtext replace TextExpander or Raycast snippets?
+A: No. It complements the built-in macOS text replacement system and does not introduce another snippet store.
+
+Q: Does Subtext collect data?
+A: No. It reads one macOS preferences key and writes to the clipboard only when asked.
+
+Q: Why do I not see a replacement I just added?
+A: Close and reopen the panel. Subtext re-reads the system list every time the panel opens.

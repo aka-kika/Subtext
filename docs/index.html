@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subtext — floating keyboard-first text replacements for macOS</title>
+  <meta name="description" content="Subtext is a floating, keyboard-first macOS panel that turns your existing system text replacements into a searchable snippet launcher. Press a shortcut, filter, Enter, paste.">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <link rel="canonical" href="https://github.com/aka-kika/Subtext">
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Subtext — your macOS text replacements, one shortcut away">
+  <meta property="og:description" content="A floating, keyboard-first panel for the text replacements already living in macOS System Settings.">
+  <meta property="og:url" content="https://github.com/aka-kika/Subtext">
+  <meta property="og:image" content="https://raw.githubusercontent.com/aka-kika/Subtext/d500be046f5375e34faed64c4da85520e2d1e3a1/assets/icon.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Subtext — floating keyboard-first text replacements for macOS">
+  <meta name="twitter:description" content="No new snippet database. No sync service. No subscription. Just your system replacements in a fast overlay.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/aka-kika/Subtext/d500be046f5375e34faed64c4da85520e2d1e3a1/assets/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f2ecdc;
+      --paper-2: #eae3d1;
+      --paper-3: #d9d2c2;
+      --ink: #0e2a22;
+      --ink-soft: rgba(14, 42, 34, .72);
+      --line: rgba(14, 42, 34, .16);
+      --chart: #c8f547;
+      --mint: #9be5b9;
+      --white: #fffdf5;
+      --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --serif: Georgia, "Times New Roman", serif;
+      --shadow: 0 24px 70px rgba(14, 42, 34, .22);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.5;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-underline-offset: 3px; }
+    a:focus-visible, button:focus-visible, input:focus-visible, details:focus-visible {
+      outline: 2px solid var(--chart);
+      outline-offset: 3px;
+    }
+    .skip-link {
+      position: absolute;
+      left: 16px;
+      top: -100px;
+      z-index: 100;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .skip-link:focus { top: 16px; }
+
+    .site-header {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 24px;
+      background: rgba(242, 236, 220, .96);
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-weight: 800;
+      letter-spacing: -.03em;
+    }
+    .brand img { width: 28px; height: 28px; display: block; }
+    .site-header nav {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .site-header nav a { text-decoration: none; opacity: .78; }
+    .site-header nav a:hover { opacity: 1; }
+    .header-cta {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 14px;
+      border: 1px solid var(--ink);
+      border-radius: 999px;
+      background: var(--chart);
+      color: var(--ink);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 1px 0 var(--ink);
+    }
+
+    main { padding-top: 64px; }
+    .hero {
+      min-height: calc(100svh - 64px);
+      display: grid;
+      grid-template-columns: 2fr repeat(2, 3fr) repeat(2, 2fr);
+      grid-template-rows: 1fr auto;
+      gap: 24px;
+      padding: 64px 32px 28px;
+      position: relative;
+      overflow: clip;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 44vw;
+      height: 44vw;
+      min-width: 420px;
+      min-height: 420px;
+      right: -16vw;
+      top: 8vh;
+      background: var(--chart);
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      z-index: -1;
+    }
+    .hero-copy {
+      grid-column: 1 / 4;
+      align-self: center;
+      max-width: 850px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 22px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .pulse {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow: 0 0 0 0 rgba(14, 42, 34, .35);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      70% { box-shadow: 0 0 0 12px rgba(14, 42, 34, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(14, 42, 34, 0); }
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(48px, 7.4vw, 112px);
+      line-height: .9;
+      letter-spacing: -.07em;
+      font-weight: 800;
+      max-width: 10ch;
+    }
+    h1 em {
+      font-family: var(--serif);
+      font-weight: 500;
+      letter-spacing: -.05em;
+      background: linear-gradient(transparent 58%, var(--chart) 58%);
+      padding: 0 .04em;
+    }
+    .lede {
+      margin: 28px 0 0;
+      max-width: 58ch;
+      font-size: clamp(18px, 2vw, 24px);
+      color: var(--ink-soft);
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-top: 34px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border: 1px solid var(--ink);
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--paper);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .button.secondary {
+      background: transparent;
+      color: var(--ink);
+    }
+    .quick-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 40px 0 0;
+      max-width: 720px;
+    }
+    .quick-facts div { border-top: 1px solid var(--line); padding-top: 12px; }
+    .quick-facts dt {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .quick-facts dd { margin: 4px 0 0; font-weight: 700; }
+
+    .demo-wrap {
+      grid-column: 4 / 6;
+      align-self: center;
+      justify-self: end;
+      width: min(100%, 560px);
+      position: relative;
+    }
+    .demo-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .panel {
+      border: 1px solid var(--ink);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 245, .92);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .dot { width: 10px; height: 10px; border: 1px solid var(--ink); border-radius: 50%; }
+    .dot:nth-child(1) { background: var(--chart); }
+    .dot:nth-child(2) { background: var(--mint); }
+    .dot:nth-child(3) { background: var(--paper-3); }
+    .panel-title { margin-left: 6px; }
+    .panel input {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      padding: 18px 16px;
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      outline: none;
+    }
+    .panel input::placeholder { color: rgba(14, 42, 34, .48); }
+    .panel ul {
+      list-style: none;
+      margin: 0;
+      padding: 8px;
+      max-height: 320px;
+      overflow: auto;
+      overflow-x: hidden;
+    }
+    .panel li {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .panel li > span:last-child { min-width: 0; }
+    .panel li[aria-selected="true"] {
+      background: var(--chart);
+      box-shadow: inset 0 0 0 1px var(--ink);
+    }
+    .shortcut {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .phrase { display: block; font-weight: 700; }
+    .snippet {
+      display: block;
+      margin-top: 3px;
+      color: var(--ink-soft);
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .demo-status {
+      margin: 0;
+      padding: 12px 14px 14px;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+    .demo-note {
+      margin: 12px 0 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+    kbd {
+      display: inline-block;
+      min-width: 22px;
+      padding: 2px 6px;
+      border: 1px solid var(--ink);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      background: var(--white);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .hero-bottom {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 2fr repeat(2, 3fr) repeat(2, 2fr);
+      gap: 24px;
+      align-items: end;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+    .hero-bottom p { margin: 0; font-family: var(--mono); font-size: 13px; color: var(--ink-soft); }
+    .hero-bottom strong { color: var(--ink); }
+
+    .section {
+      border-top: 1px solid var(--line);
+      padding: 88px 32px;
+    }
+    .section-inner { max-width: 1360px; margin: 0 auto; }
+    .section-kicker {
+      margin: 0 0 18px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .answer-section {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .answer-section .section-kicker { color: rgba(242, 236, 220, .68); }
+    .answer {
+      margin: 0;
+      max-width: 24ch;
+      font-size: clamp(34px, 5vw, 74px);
+      line-height: .98;
+      letter-spacing: -.06em;
+      font-weight: 800;
+    }
+    .answer span { background: linear-gradient(transparent 58%, var(--chart) 58%); color: var(--ink); padding: 0 .04em; }
+    .answer-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      gap: 48px;
+      align-items: start;
+    }
+    .fact-stack { display: grid; gap: 14px; }
+    .fact {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(242, 236, 220, .22);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .fact b { font-size: 14px; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+      margin-top: 36px;
+    }
+    .step { border-top: 1px solid var(--ink); padding-top: 18px; }
+    .step-number {
+      display: block;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    .step h3 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1;
+      letter-spacing: -.05em;
+    }
+    .step p { margin: 14px 0 0; color: var(--ink-soft); max-width: 34ch; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      margin-top: 34px;
+    }
+    .plain-block { border-top: 1px solid var(--ink); padding-top: 18px; }
+    .plain-block h3 { margin: 0 0 16px; font-size: 26px; letter-spacing: -.04em; }
+    .plain-block ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .plain-block li { padding-left: 18px; position: relative; color: var(--ink-soft); }
+    .plain-block li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .62em;
+      width: 7px;
+      height: 7px;
+      background: var(--chart);
+      border: 1px solid var(--ink);
+    }
+
+    .faq-list { margin-top: 30px; border-top: 1px solid var(--ink); }
+    details { border-bottom: 1px solid var(--line); }
+    summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 22px 0;
+      font-weight: 800;
+      font-size: clamp(20px, 2.4vw, 30px);
+      letter-spacing: -.04em;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: "+";
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+    }
+    details[open] summary::after { content: "–"; }
+    details p { margin: 0 0 22px; max-width: 72ch; color: var(--ink-soft); font-size: 18px; }
+
+    .download-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+      margin-top: 28px;
+      padding: 28px;
+      border: 1px solid var(--ink);
+      border-radius: calc(var(--radius) + 8px);
+      background: var(--chart);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+    .download-panel h2 {
+      margin: 0;
+      font-size: clamp(32px, 5vw, 64px);
+      line-height: .95;
+      letter-spacing: -.06em;
+    }
+    .download-panel p { margin: 12px 0 0; font-family: var(--mono); font-size: 13px; }
+    .checksum {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 22px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .checksum code {
+      padding: 10px 12px;
+      background: rgba(255, 253, 245, .72);
+      border: 1px solid var(--ink);
+      border-radius: 10px;
+      overflow-wrap: anywhere;
+    }
+    .copy-button {
+      border: 1px solid var(--ink);
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 28px 32px 40px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+    footer a { color: var(--ink); }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 980px) {
+      .site-header nav { display: none; }
+      .hero, .hero-bottom { grid-template-columns: 1fr; }
+      .hero { padding-top: 44px; }
+      .hero-copy, .demo-wrap, .hero-bottom { grid-column: 1; }
+      .demo-wrap { justify-self: stretch; width: 100%; }
+      .hero::before { right: -52vw; top: 28vh; }
+      .quick-facts, .steps, .two-col, .answer-grid, .download-panel { grid-template-columns: 1fr; }
+      .section { padding: 64px 22px; }
+      .hero, footer { padding-left: 22px; padding-right: 22px; }
+      .site-header { padding-left: 16px; padding-right: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Subtext",
+        "url": "https://github.com/aka-kika/Subtext",
+        "description": "Subtext is a floating, keyboard-first macOS panel that turns existing system text replacements into a searchable snippet launcher.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "macOS 14 Sonoma or later",
+        "processorRequirements": "Apple Silicon for the prebuilt download; Intel Macs can build from source",
+        "softwareVersion": "1.0.0",
+        "fileSize": "2.2MB",
+        "downloadUrl": "https://github.com/aka-kika/Subtext/releases/download/v1.0.0/Subtext-1.0.dmg",
+        "license": "https://github.com/aka-kika/Subtext/blob/main/LICENSE",
+        "author": {
+          "@type": "Person",
+          "name": "KIKA",
+          "url": "https://akakika.com"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Floating non-activating panel",
+          "Reads macOS text replacements from the system",
+          "Keyboard-first filtering and copying",
+          "Import plist files and remove replacements by shortcut",
+          "Mini, Normal, and Big panel sizes",
+          "Dark, Light, and System themes",
+          "No network calls, analytics, accounts, or subscription"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Subtext?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Subtext is a small macOS utility that gives system text replacements a fast, searchable, keyboard-driven interface — a snippet launcher for replacements you already own."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Subtext replace TextExpander or Raycast snippets?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Subtext complements the built-in macOS text replacement system instead of introducing another snippet store. Replacements stay in System Settings and keep syncing through iCloud."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Subtext collect data?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Subtext makes no network calls, includes no analytics, and requires no account. It reads one macOS preferences key and writes to the clipboard only when asked."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why do I not see a replacement I just added?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Close and reopen the panel. Subtext re-reads the system text replacement list every time the panel opens."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Subtext work on Intel Macs?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The prebuilt app is Apple Silicon. On Intel, build Subtext from source with swift build -c release."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "GitHub",
+            "item": "https://github.com/aka-kika"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Subtext",
+            "item": "https://github.com/aka-kika/Subtext"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Subtext home">
+      <img src="assets/icon.png" alt="Subtext app icon">
+      <span>Subtext</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="#demo">Demo</a>
+      <a href="#answer">Answer</a>
+      <a href="#how">How</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/aka-kika/Subtext">GitHub</a>
+    </nav>
+    <a class="header-cta" href="https://github.com/aka-kika/Subtext/releases/download/v1.0.0/Subtext-1.0.dmg">Download</a>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> macOS 14+ · signed &amp; notarized · no account</p>
+        <h1 id="hero-title">Your text replacements, <em>one shortcut</em> away.</h1>
+        <p class="lede">Subtext turns the macOS text replacements you already own into a floating, keyboard-first panel. Press a shortcut, type a few letters, hit Enter — the snippet is on your clipboard.</p>
+        <div class="hero-actions">
+          <a class="button" href="https://github.com/aka-kika/Subtext/releases/download/v1.0.0/Subtext-1.0.dmg">Download Subtext-1.0.dmg</a>
+          <a class="button secondary" href="https://github.com/aka-kika/Subtext">View on GitHub</a>
+        </div>
+        <dl class="quick-facts" aria-label="Quick facts">
+          <div>
+            <dt>Size</dt>
+            <dd>2.2 MB</dd>
+          </div>
+          <div>
+            <dt>License</dt>
+            <dd>MIT</dd>
+          </div>
+          <div>
+            <dt>Privacy</dt>
+            <dd>No network calls</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="demo-wrap" id="demo">
+        <div class="demo-label" aria-hidden="true">
+          <span>Live demo</span>
+          <span>filter → enter → paste</span>
+        </div>
+        <div class="panel">
+          <div class="panel-top" aria-hidden="true">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="panel-title">Subtext</span>
+          </div>
+          <label class="sr-only" for="demo-input">Filter text replacements</label>
+          <input id="demo-input" type="text" placeholder="Type to filter — try ;sig" autocomplete="off" spellcheck="false">
+          <ul id="demo-list" role="listbox" aria-label="Matching text replacements"></ul>
+          <p id="demo-status" class="demo-status" aria-live="polite">Press <kbd>/</kbd> to focus. <kbd>↑</kbd><kbd>↓</kbd> move · <kbd>Enter</kbd> copy · <kbd>Esc</kbd> clear.</p>
+        </div>
+        <p class="demo-note">Demo copies example snippets only. The real app reads your macOS text replacements.</p>
+      </div>
+
+      <div class="hero-bottom">
+        <p><strong>No new snippet database.</strong><br>Subtext reads the replacements already stored in macOS.</p>
+        <p><strong>No sync service.</strong><br>System Settings and iCloud stay the source of truth.</p>
+        <p><strong>No subscription.</strong><br>Free, MIT-licensed, signed and notarized.</p>
+        <p><strong>Fast by default.</strong><br>Keyboard-first, clipboard-out, gone on Escape.</p>
+        <p><strong>Apple Silicon build.</strong><br>Intel Macs can build from source.</p>
+      </div>
+    </section>
+
+    <section class="section answer-section" id="answer" aria-labelledby="answer-title">
+      <div class="section-inner answer-grid">
+        <div>
+          <p class="section-kicker">Direct answer</p>
+          <h2 class="answer" id="answer-title">Subtext is a <span>floating macOS panel</span> for system text replacements.</h2>
+        </div>
+        <div class="fact-stack" aria-label="Answer facts">
+          <div class="fact"><b>What it does</b><span>Summons a searchable overlay with a global shortcut, filters replacements as you type, and copies the selected snippet with Enter.</span></div>
+          <div class="fact"><b>What it uses</b><span>The text replacements already configured in macOS System Settings — no separate snippet store.</span></div>
+          <div class="fact"><b>Who it is for</b><span>Mac users who rely on text replacements but do not want to memorize every shortcut.</span></div>
+          <div class="fact"><b>What it avoids</b><span>Accounts, analytics, network calls, subscriptions, and manual sync.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how" aria-labelledby="how-title">
+      <div class="section-inner">
+        <p class="section-kicker">How it works</p>
+        <h2 class="sr-only" id="how-title">How Subtext works</h2>
+        <div class="steps">
+          <article class="step">
+            <span class="step-number">01</span>
+            <h3>Summon.</h3>
+            <p>Launch Subtext once, record your global shortcut in Settings, then press it anywhere. The panel floats over the current app without stealing window focus.</p>
+          </article>
+          <article class="step">
+            <span class="step-number">02</span>
+            <h3>Filter.</h3>
+            <p>Type a few letters. Subtext re-reads the system replacement list every time the panel opens, so newly added replacements show up on the next summon.</p>
+          </article>
+          <article class="step">
+            <span class="step-number">03</span>
+            <h3>Copy.</h3>
+            <p>Use ↑ and ↓ to move. Press Enter to copy, Escape to dismiss. Your hands never leave the keyboard.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="details" aria-labelledby="details-title">
+      <div class="section-inner">
+        <p class="section-kicker">The point</p>
+        <h2 class="sr-only" id="details-title">What Subtext is and is not</h2>
+        <div class="two-col">
+          <div class="plain-block">
+            <h3>It is</h3>
+            <ul>
+              <li>A Raycast-style overlay for built-in macOS text replacements.</li>
+              <li>A floating panel with Mini, Normal, and Big sizes.</li>
+              <li>A keyboard-first snippet launcher with import and remove actions.</li>
+              <li>A tiny native utility with Dark, Light, and System themes.</li>
+            </ul>
+          </div>
+          <div class="plain-block">
+            <h3>It is not</h3>
+            <ul>
+              <li>Not another snippet database to maintain.</li>
+              <li>Not a sync service, account system, or subscription.</li>
+              <li>Not a TextExpander or Raycast replacement.</li>
+              <li>Not a telemetry app — it collects nothing.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="section-inner">
+        <p class="section-kicker">FAQ</p>
+        <h2 class="sr-only" id="faq-title">Frequently asked questions</h2>
+        <div class="faq-list">
+          <details>
+            <summary>What is Subtext?</summary>
+            <p>A small macOS utility that gives your system text replacements a fast, searchable, keyboard-driven interface — a snippet launcher for the replacements you already own.</p>
+          </details>
+          <details>
+            <summary>Does it replace TextExpander or Raycast snippets?</summary>
+            <p>No — it complements the built-in macOS text replacement system instead of introducing another snippet store. Your replacements stay in System Settings and keep syncing through iCloud to your iPhone and iPad.</p>
+          </details>
+          <details>
+            <summary>Why do I not see a replacement I just added?</summary>
+            <p>You will — close and reopen the panel. Subtext re-reads the system list every time the panel opens.</p>
+          </details>
+          <details>
+            <summary>Does it work on Intel Macs?</summary>
+            <p>The prebuilt app is Apple Silicon. On Intel, build from source with <code>swift build -c release</code>.</p>
+          </details>
+          <details>
+            <summary>Does it collect anything?</summary>
+            <p>Nothing. No network calls, no analytics, no accounts. It reads one macOS preferences key and writes to your clipboard when you ask it to.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="download" aria-labelledby="download-title">
+      <div class="section-inner">
+        <p class="section-kicker">Download</p>
+        <div class="download-panel">
+          <div>
+            <h2 id="download-title">Subtext 1.0 for macOS.</h2>
+            <p>Requires macOS 14 Sonoma or later. Prebuilt app: Apple Silicon. Signed with Developer ID and notarized by Apple.</p>
+            <div class="checksum">
+              <span>SHA-256</span>
+              <code id="checksum">eb504c9c324dd607037e3e77b94f8286e551f4a1cf283b7350bca64fd983e7f8</code>
+              <button class="copy-button" type="button" data-copy="checksum">Copy checksum</button>
+            </div>
+          </div>
+          <a class="button" href="https://github.com/aka-kika/Subtext/releases/download/v1.0.0/Subtext-1.0.dmg">Download DMG</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Subtext · built by <a href="https://akakika.com">KIKA</a></span>
+    <span><a href="https://github.com/aka-kika/Subtext/releases">Releases</a> · <a href="https://github.com/aka-kika/Subtext/issues">Issues</a> · <a href="https://github.com/aka-kika/Subtext/blob/main/LICENSE">MIT License</a></span>
+  </footer>
+
+  <noscript>
+    <p style="padding: 16px 32px; border-top: 1px solid rgba(14,42,34,.16); font-family: ui-monospace, monospace;">The demo needs JavaScript, but the product facts, FAQ, and download links on this page work without it.</p>
+  </noscript>
+
+  <script>
+    const replacements = [
+      { shortcut: ";sig", phrase: "Email signature", text: "Best,\nKika" },
+      { shortcut: ";addr", phrase: "Mailing address", text: "KIKA · Hub · akakika.com" },
+      { shortcut: ";site", phrase: "Website", text: "https://akakika.com" },
+      { shortcut: ";gh", phrase: "GitHub profile", text: "https://github.com/aka-kika" },
+      { shortcut: ";sub", phrase: "Subtext repo", text: "https://github.com/aka-kika/Subtext" },
+      { shortcut: ";ty", phrase: "Thank you", text: "Thank you — I really appreciate it." },
+      { shortcut: ";call", phrase: "Schedule a call", text: "Here is my availability this week: Tue 10:00–12:00, Thu 14:00–16:00." },
+      { shortcut: ";ship", phrase: "Ship note", text: "Small, focused, tested. Changelog updated. Release notes drafted." }
+    ];
+
+    const input = document.querySelector("#demo-input");
+    const list = document.querySelector("#demo-list");
+    const status = document.querySelector("#demo-status");
+    let matches = replacements;
+    let selectedIndex = 0;
+
+    function renderMatches() {
+      const query = input.value.trim().toLowerCase();
+      matches = replacements.filter((item) => {
+        return [item.shortcut, item.phrase, item.text].join(" ").toLowerCase().includes(query);
+      });
+      selectedIndex = 0;
+      list.innerHTML = "";
+
+      if (matches.length === 0) {
+        const empty = document.createElement("li");
+        empty.innerHTML = '<span class="shortcut">none</span><span><span class="phrase">No matches</span><span class="snippet">Try ;sig, ;site, ;gh, or ;ty</span></span>';
+        empty.setAttribute("aria-selected", "false");
+        list.appendChild(empty);
+        status.textContent = "No matches. Try ;sig, ;site, ;gh, or ;ty.";
+        return;
+      }
+
+      matches.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", index === selectedIndex ? "true" : "false");
+        li.dataset.index = String(index);
+        li.innerHTML = `<span class="shortcut">${item.shortcut}</span><span><span class="phrase">${item.phrase}</span><span class="snippet">${item.text.replace(/\n/g, " ")}</span></span>`;
+        li.addEventListener("click", () => {
+          selectedIndex = index;
+          updateSelection();
+          copySelected();
+        });
+        list.appendChild(li);
+      });
+      status.innerHTML = `${matches.length} match${matches.length === 1 ? "" : "es"}. <kbd>↑</kbd><kbd>↓</kbd> move · <kbd>Enter</kbd> copy.`;
+    }
+
+    function updateSelection() {
+      [...list.children].forEach((li, index) => {
+        li.setAttribute("aria-selected", index === selectedIndex ? "true" : "false");
+      });
+      const selected = list.children[selectedIndex];
+      if (selected) selected.scrollIntoView({ block: "nearest" });
+    }
+
+    async function copyText(text, label) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const area = document.createElement("textarea");
+          area.value = text;
+          area.setAttribute("readonly", "");
+          area.style.position = "absolute";
+          area.style.left = "-9999px";
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+        }
+        status.textContent = `Copied ${label} to clipboard.`;
+      } catch (error) {
+        status.textContent = `Could not copy automatically. Snippet: ${text}`;
+      }
+    }
+
+    function copySelected() {
+      const item = matches[selectedIndex];
+      if (!item) return;
+      copyText(item.text, item.shortcut);
+    }
+
+    input.addEventListener("input", renderMatches);
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        selectedIndex = Math.min(selectedIndex + 1, matches.length - 1);
+        updateSelection();
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        selectedIndex = Math.max(selectedIndex - 1, 0);
+        updateSelection();
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        copySelected();
+      }
+      if (event.key === "Escape") {
+        input.value = "";
+        renderMatches();
+        input.blur();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey && tag !== "INPUT" && tag !== "TEXTAREA") {
+        event.preventDefault();
+        input.focus();
+        input.select();
+      }
+    });
+
+    document.querySelectorAll("[data-copy]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const target = document.getElementById(button.dataset.copy);
+        if (!target) return;
+        await copyText(target.textContent.trim(), "SHA-256 checksum");
+        button.textContent = "Copied";
+        window.setTimeout(() => { button.textContent = "Copy checksum"; }, 1400);
+      });
+    });
+
+    renderMatches();
+  </script>
+</body>
+</html>
