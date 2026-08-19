@@ -12,7 +12,7 @@ Press a shortcut, find your snippet, copy it — gone before you notice it was t
 [![Notarized](https://img.shields.io/badge/signed_%26_notarized-Apple-2b2b2b?style=flat-square)](https://github.com/aka-kika/Subtext/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-6D80A6?style=flat-square)](LICENSE)
 
-[Download](https://github.com/aka-kika/Subtext/releases/download/v1.0.0/Subtext-1.0.dmg) · [Releases](https://github.com/aka-kika/Subtext/releases) · [akakika.com](https://akakika.com)
+[Download](https://github.com/aka-kika/Subtext/releases/download/v1.0.0/Subtext-1.0.dmg) · [Website](https://aka-kika.github.io/Subtext/) · [Releases](https://github.com/aka-kika/Subtext/releases) · [akakika.com](https://akakika.com)
 
 </div>
 

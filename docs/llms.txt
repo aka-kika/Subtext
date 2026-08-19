@@ -19,6 +19,7 @@ Subtext turns the text replacements already stored in macOS System Settings into
 - Extras: import .plist files, remove replacements by shortcut, Mini/Normal/Big sizes, Dark/Light/System themes
 
 ## Canonical links
+- Website: https://aka-kika.github.io/Subtext/
 - Repository: https://github.com/aka-kika/Subtext
 - Releases: https://github.com/aka-kika/Subtext/releases
 - Issues: https://github.com/aka-kika/Subtext/issues
