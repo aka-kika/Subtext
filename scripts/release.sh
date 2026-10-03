@@ -18,8 +18,8 @@ RES="$PROJECT_DIR/Subtext/Resources"
 
 # Sign by certificate hash, not display name — duplicate certs with the same
 # name in the keychain make name-based signing fail as "ambiguous".
-IDENTITY="${SUBTEXT_SIGN_IDENTITY:-$(security find-identity -v -p codesigning \
-  | grep "Developer ID Application" | head -1 | awk '{print $2}')}"
+# G2 Developer ID (2026-10-03, valid to 2031-09-17); the old authority ends 2027-02-01.
+IDENTITY="${SUBTEXT_SIGN_IDENTITY:-7E3E9BC6656A41A13F77F5C05E1663E77419388E}"
 if [ -z "$IDENTITY" ]; then
   echo "✗ No 'Developer ID Application' identity found in the Keychain." >&2
   exit 1
