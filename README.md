@@ -16,6 +16,8 @@ Press a shortcut, find your snippet, copy it — gone before you notice it was t
 
 </div>
 
+<p align="center"><img src="docs/screenshots/subtext-panel.png" width="570" alt="Subtext panel filtering text replacements"></p>
+
 ## Why
 
 macOS text replacements are genuinely useful — and buried four clicks deep in
